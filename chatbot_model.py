@@ -199,6 +199,7 @@ def evaluateInput(encoder, decoder, searcher, voc):
             # Normalize sentence
             input_sentence = normalizeString(input_sentence)
             # Evaluate sentence
+            # TODO: Find closest match for a word, don't just throw out unknown word
             output_words = evaluate(encoder, decoder, searcher, voc, input_sentence)
             # Format and print response sentence
             output_words[:] = [x for x in output_words if not (x == 'EOS' or x == 'PAD')]
@@ -281,6 +282,7 @@ if __name__ == "__main__":
                 embedding, args.encoder_n_layers, args.decoder_n_layers, SAVE_DIR, n_iteration, args.batch_size,
                 args.print_every, args.save_every, clip, CORPUS_NAME, loadFilename)
     else:
+        # TODO: Make it such that the VOC and some required data is stored somewhere so we dont have to keep calling dataloader
         # Ensure encoder and decoder are in eval mode
         encoder.eval()
         decoder.eval()
