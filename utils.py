@@ -24,7 +24,7 @@ def extractSentencePairs(conversations):
         # Iterate over all the lines of the conversation
         for i in range(len(conversation["lines"]) - 1):  # We ignore the last line (no answer for it)
             inputLine = conversation["lines"][i]["text"].strip()
-            targetLine = conversation["lines"][i+1]["text"].strip()
+            targetLine = conversation["lines"][i + 1]["text"].strip()
             # Filter wrong samples (if one of the lists is empty)
             if inputLine and targetLine:
                 qa_pairs.append([inputLine, targetLine])
