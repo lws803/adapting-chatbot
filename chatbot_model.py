@@ -1,15 +1,3 @@
-# -*- coding: utf-8 -*-
-######################################################################
-# Preparations
-# ------------
-#
-# To start, Download the data ZIP file
-# `here <https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html>`__
-# and put in a ``data/`` directory under the current directory.
-#
-# After that, let’s import some necessities.
-#
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -34,6 +22,15 @@ parser.add_argument('--train', action='store_true')
 parser.add_argument('--save_every', default=500, type=int)
 parser.add_argument('--print_every', default=1, type=int)
 parser.add_argument('--hidden_size', default=500, type=int)
+parser.add_argument('--model_name', default='model_cb', type=str)
+parser.add_argument('--attn_model', default='dot', type=str, help='general, concat or dot',
+                    choices=['dot', 'general', 'concat'])
+parser.add_argument('--encoder_n_layers', default=2, type=int)
+parser.add_argument('--decoder_n_layers', default=2, type=int)
+parser.add_argument('--dropout', default=0.1, type=float)
+parser.add_argument('--batch_size', default=64, type=int)
+parser.add_argument('--checkpoint_iter', default=4000, type=int)
+parser.add_argument('--iterations', default=4000, type=int)
 
 args = parser.parse_args()
 
@@ -42,18 +39,6 @@ device = torch.device("cuda" if USE_CUDA else "cpu")
 
 dl = DataLoader()
 voc, pairs = dl.generate_voc_pairs()
-
-
-# Example for validation
-small_batch_size = 5
-batches = batch2TrainData(voc, [random.choice(pairs) for _ in range(small_batch_size)])
-input_variable, lengths, target_variable, mask, max_target_len = batches
-
-print("input_variable:", input_variable)
-print("lengths:", lengths)
-print("target_variable:", target_variable)
-print("mask:", mask)
-print("max_target_len:", max_target_len)
 
 
 def maskNLLLoss(inp, target, mask):
@@ -184,7 +169,6 @@ def trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, deco
             }, os.path.join(directory, '{}_{}.tar'.format(iteration, 'checkpoint')))
 
 
-
 def evaluate(encoder, decoder, searcher, voc, sentence, max_length=MAX_LENGTH):
     ### Format input sentence as a batch
     # words -> indexes
@@ -224,24 +208,12 @@ def evaluateInput(encoder, decoder, searcher, voc):
             print("Error: Encountered unknown word.")
 
 
-# Configure models
-model_name = 'cb_model'
-attn_model = 'dot'
-#attn_model = 'general'
-#attn_model = 'concat'
-hidden_size = 500
-encoder_n_layers = 2
-decoder_n_layers = 2
-dropout = 0.1
-batch_size = 64
-
 # Set checkpoint to load from; set to None if starting from scratch
 loadFilename = None
-checkpoint_iter = 4000
 if not args.train:
-    loadFilename = os.path.join(SAVE_DIR, model_name, CORPUS_NAME,
-                            '{}-{}_{}'.format(encoder_n_layers, decoder_n_layers, args.hidden_size),
-                            '{}_checkpoint.tar'.format(checkpoint_iter))
+    loadFilename = os.path.join(SAVE_DIR, args.model_name, CORPUS_NAME,
+                            '{}-{}_{}'.format(args.encoder_n_layers, args.decoder_n_layers, args.hidden_size),
+                            '{}_checkpoint.tar'.format(args.checkpoint_iter))
 
 # Load model if a loadFilename is provided
 if loadFilename:
@@ -263,8 +235,8 @@ embedding = nn.Embedding(voc.num_words, args.hidden_size)
 if loadFilename:
     embedding.load_state_dict(embedding_sd)
 # Initialize encoder & decoder models
-encoder = EncoderRNN(args.hidden_size, embedding, encoder_n_layers, dropout)
-decoder = LuongAttnDecoderRNN(attn_model, embedding, args.hidden_size, voc.num_words, decoder_n_layers, dropout)
+encoder = EncoderRNN(args.hidden_size, embedding, args.encoder_n_layers, args.dropout)
+decoder = LuongAttnDecoderRNN(args.attn_model, embedding, args.hidden_size, voc.num_words, args.decoder_n_layers, args.dropout)
 if loadFilename:
     encoder.load_state_dict(encoder_sd)
     decoder.load_state_dict(decoder_sd)
@@ -276,11 +248,21 @@ print('Models built and ready to go!')
 
 if __name__ == "__main__":
     if args.train:
+        # Example for validation
+        small_batch_size = 5
+        batches = batch2TrainData(voc, [random.choice(pairs) for _ in range(small_batch_size)])
+        input_variable, lengths, target_variable, mask, max_target_len = batches
+        print("input_variable:", input_variable)
+        print("lengths:", lengths)
+        print("target_variable:", target_variable)
+        print("mask:", mask)
+        print("max_target_len:", max_target_len)
+
         clip = 50.0
         teacher_forcing_ratio = 1.0
         learning_rate = 0.0001
         decoder_learning_ratio = 5.0
-        n_iteration = 4000
+        n_iteration = args.iterations
 
         # Ensure dropout layers are in train mode
         encoder.train()
@@ -296,10 +278,11 @@ if __name__ == "__main__":
 
         # Run training iterations
         print("Starting Training!")
-        trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, decoder_optimizer,
-                embedding, encoder_n_layers, decoder_n_layers, SAVE_DIR, n_iteration, batch_size,
+        trainIters(args.model_name, voc, pairs, encoder, decoder, encoder_optimizer, decoder_optimizer,
+                embedding, args.encoder_n_layers, args.decoder_n_layers, SAVE_DIR, n_iteration, args.batch_size,
                 args.print_every, args.save_every, clip, CORPUS_NAME, loadFilename)
     else:
+        # Ensure encoder and decoder are in eval mode
         encoder.eval()
         decoder.eval()
         # Initialize search module
