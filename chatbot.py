@@ -281,7 +281,6 @@ if __name__ == "__main__":
                 embedding, args.encoder_n_layers, args.decoder_n_layers, SAVE_DIR, n_iteration, args.batch_size,
                 args.print_every, args.save_every, clip, CORPUS_NAME, loadFilename)
     else:
-        # TODO: Make it such that the VOC and some required data is stored somewhere so we dont have to keep calling dataloader
         # Ensure encoder and decoder are in eval mode
         encoder.eval()
         decoder.eval()

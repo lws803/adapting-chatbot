@@ -14,7 +14,7 @@ import os
 import codecs
 import csv
 
-CORPUS_NAME = "cornell movie-dialogs corpus"
+CORPUS_NAME = "wilson"
 CORPUS = os.path.join("data", CORPUS_NAME)
 SAVE_DIR = os.path.join("data", "save")
 DELIMETER = '\t'
@@ -135,7 +135,7 @@ class DataLoader:
 
 
     def generate_voc_pairs(self):
-        printLines(os.path.join(CORPUS, "movie_lines.txt"))
+        # printLines(os.path.join(CORPUS, "movie_lines.txt"))
         # Define path to new file
         datafile = os.path.join(CORPUS, "formatted_movie_lines.txt")
 
