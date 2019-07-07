@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import unicodedata
+import editdistance
 
 import re
 from io import open
@@ -46,9 +47,20 @@ def normalizeString(s):
     s = re.sub(r"\s+", r" ", s).strip()
     return s
 
+def find_best_match(word, lst):
+    return min((editdistance.eval(word, w), w) for w in lst)[1]
 
 def indexesFromSentence(voc, sentence):
-    return [voc.word2index[word] for word in sentence.split(' ')] + [EOS_token]
+    indexed_sentence = []
+    for word in sentence.split(' '):
+        if word not in voc.word2index:
+            # print(find_best_match(word, list(voc.word2index)))
+            best_word = find_best_match(word, list(voc.word2index))
+            indexed_sentence.append(voc.word2index[best_word])
+        else:
+            indexed_sentence.append(voc.word2index[word])
+    indexed_sentence.append(EOS_token)
+    return indexed_sentence
 
 def zeroPadding(l, fillvalue=PAD_token):
     return list(itertools.zip_longest(*l, fillvalue=fillvalue))

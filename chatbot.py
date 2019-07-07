@@ -199,7 +199,6 @@ def evaluateInput(encoder, decoder, searcher, voc):
             # Normalize sentence
             input_sentence = normalizeString(input_sentence)
             # Evaluate sentence
-            # TODO: Find closest match for a word, don't just throw out unknown word
             output_words = evaluate(encoder, decoder, searcher, voc, input_sentence)
             # Format and print response sentence
             output_words[:] = [x for x in output_words if not (x == 'EOS' or x == 'PAD')]

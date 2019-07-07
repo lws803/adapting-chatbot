@@ -1,1 +1,4 @@
 vaderSentiment
+editdistance
+torch
+torchvision
