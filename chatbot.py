@@ -182,6 +182,10 @@ def evaluate(encoder, decoder, searcher, voc, sentence, max_length=MAX_LENGTH):
     lengths = lengths.to(device)
     # Decode sentence with searcher
     tokens, scores = searcher(input_batch, lengths, max_length)
+    score = 1
+    for item in scores:
+        score *= item
+    print("scores:", float(score))
     # indexes -> words
     decoded_words = [voc.index2word[token.item()] for token in tokens]
     return decoded_words
