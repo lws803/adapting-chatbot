@@ -1,7 +1,22 @@
 from io import open
-from utils import normalizeString, indexesFromSentence, zeroPadding, filterPairs, binaryMatrix
+from utils import (normalizeString,
+    indexesFromSentence,
+    zeroPadding,
+    filterPairs,
+    binaryMatrix,
+    printLines,
+    extractSentencePairs,
+    trimRareWords,
+    MIN_COUNT)
 from vocab import Voc
 import torch
+import os
+import codecs
+import csv
+
+CORPUS_NAME = "cornell movie-dialogs corpus"
+CORPUS = os.path.join("data", CORPUS_NAME)
+SAVE_DIR = os.path.join("data", "save")
 
 # Splits each line of the file into a dictionary of fields
 def loadLines(fileName, fields):
@@ -90,3 +105,47 @@ def batch2TrainData(voc, pair_batch):
     inp, lengths = inputVar(input_batch, voc)
     output, mask, max_target_len = outputVar(output_batch, voc)
     return inp, lengths, output, mask, max_target_len
+
+class DataLoader:
+
+    def generate_voc_pairs(self):
+        printLines(os.path.join(CORPUS, "movie_lines.txt"))
+
+        # Define path to new file
+        datafile = os.path.join(CORPUS, "formatted_movie_lines.txt")
+
+        delimiter = '\t'
+        # Unescape the delimiter
+        delimiter = str(codecs.decode(delimiter, "unicode_escape"))
+
+        # Initialize lines dict, conversations list, and field ids
+        lines = {}
+        conversations = []
+        MOVIE_LINES_FIELDS = ["lineID", "characterID", "movieID", "character", "text"]
+        MOVIE_CONVERSATIONS_FIELDS = ["character1ID", "character2ID", "movieID", "utteranceIDs"]
+
+        # Load lines and process conversations
+        print("\nProcessing corpus...")
+        lines = loadLines(os.path.join(CORPUS, "movie_lines.txt"), MOVIE_LINES_FIELDS)
+        print("\nLoading conversations...")
+        conversations = loadConversations(os.path.join(CORPUS, "movie_conversations.txt"),
+                                        lines, MOVIE_CONVERSATIONS_FIELDS)
+
+        # Write new csv file
+        print("\nWriting newly formatted file...")
+        with open(datafile, 'w', encoding='utf-8') as outputfile:
+            writer = csv.writer(outputfile, delimiter=delimiter, lineterminator='\n')
+            for pair in extractSentencePairs(conversations):
+                writer.writerow(pair)
+
+        # Print a sample of lines
+        print("\nSample lines from file:")
+        printLines(datafile)
+
+
+        # Load/Assemble voc and pairs
+        voc, pairs = loadPrepareData(CORPUS, CORPUS_NAME, datafile, SAVE_DIR)
+
+        # Trim voc and pairs
+        pairs = trimRareWords(voc, pairs, MIN_COUNT)
+        return voc, pairs

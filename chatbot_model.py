@@ -18,18 +18,14 @@ from __future__ import unicode_literals
 import torch
 import torch.nn as nn
 from torch import optim
-import csv
 import random
 import os
-import codecs
-from io import open
 import argparse
-from utils import (printLines, extractSentencePairs, trimRareWords, MIN_COUNT,
-                SOS_token,
+from utils import (SOS_token,
                 MAX_LENGTH,
                 normalizeString,
                 indexesFromSentence)
-from dataloader import loadLines, loadConversations, loadPrepareData, batch2TrainData
+from dataloader import batch2TrainData, DataLoader, SAVE_DIR, CORPUS_NAME
 from model import EncoderRNN, LuongAttnDecoderRNN, GreedySearchDecoder
 
 parser = argparse.ArgumentParser()
@@ -37,60 +33,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--train', action='store_true')
 parser.add_argument('--save_every', default=500, type=int)
 parser.add_argument('--print_every', default=1, type=int)
+parser.add_argument('--hidden_size', default=500, type=int)
 
 args = parser.parse_args()
 
 USE_CUDA = torch.cuda.is_available()
 device = torch.device("cuda" if USE_CUDA else "cpu")
 
+dl = DataLoader()
+voc, pairs = dl.generate_voc_pairs()
 
-corpus_name = "cornell movie-dialogs corpus"
-corpus = os.path.join("data", corpus_name)
-
-printLines(os.path.join(corpus, "movie_lines.txt"))
-
-# Define path to new file
-datafile = os.path.join(corpus, "formatted_movie_lines.txt")
-
-delimiter = '\t'
-# Unescape the delimiter
-delimiter = str(codecs.decode(delimiter, "unicode_escape"))
-
-# Initialize lines dict, conversations list, and field ids
-lines = {}
-conversations = []
-MOVIE_LINES_FIELDS = ["lineID", "characterID", "movieID", "character", "text"]
-MOVIE_CONVERSATIONS_FIELDS = ["character1ID", "character2ID", "movieID", "utteranceIDs"]
-
-# Load lines and process conversations
-print("\nProcessing corpus...")
-lines = loadLines(os.path.join(corpus, "movie_lines.txt"), MOVIE_LINES_FIELDS)
-print("\nLoading conversations...")
-conversations = loadConversations(os.path.join(corpus, "movie_conversations.txt"),
-                                  lines, MOVIE_CONVERSATIONS_FIELDS)
-
-# Write new csv file
-print("\nWriting newly formatted file...")
-with open(datafile, 'w', encoding='utf-8') as outputfile:
-    writer = csv.writer(outputfile, delimiter=delimiter, lineterminator='\n')
-    for pair in extractSentencePairs(conversations):
-        writer.writerow(pair)
-
-# Print a sample of lines
-print("\nSample lines from file:")
-printLines(datafile)
-
-
-# Load/Assemble voc and pairs
-save_dir = os.path.join("data", "save")
-voc, pairs = loadPrepareData(corpus, corpus_name, datafile, save_dir)
-# Print some pairs to validate
-print("\npairs:")
-for pair in pairs[:10]:
-    print(pair)
-
-# Trim voc and pairs
-pairs = trimRareWords(voc, pairs, MIN_COUNT)
 
 # Example for validation
 small_batch_size = 5
@@ -184,8 +136,6 @@ def train(input_variable, lengths, target_variable, mask, max_target_len, encode
 
     return sum(print_losses) / n_totals
 
-#
-
 def trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, decoder_optimizer, embedding, encoder_n_layers, decoder_n_layers, save_dir, n_iteration, batch_size, print_every, save_every, clip, corpus_name, loadFilename):
 
     # Load batches for each iteration
@@ -219,7 +169,7 @@ def trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, deco
 
         # Save checkpoint
         if (iteration % save_every == 0):
-            directory = os.path.join(save_dir, model_name, corpus_name, '{}-{}_{}'.format(encoder_n_layers, decoder_n_layers, hidden_size))
+            directory = os.path.join(save_dir, model_name, corpus_name, '{}-{}_{}'.format(encoder_n_layers, decoder_n_layers, args.hidden_size))
             if not os.path.exists(directory):
                 os.makedirs(directory)
             torch.save({
@@ -274,20 +224,6 @@ def evaluateInput(encoder, decoder, searcher, voc):
             print("Error: Encountered unknown word.")
 
 
-######################################################################
-# Run Model
-# ---------
-#
-# Finally, it is time to run our model!
-#
-# Regardless of whether we want to train or test the chatbot model, we
-# must initialize the individual encoder and decoder models. In the
-# following block, we set our desired configurations, choose to start from
-# scratch or set a checkpoint to load from, and build and initialize the
-# models. Feel free to play with different model configurations to
-# optimize performance.
-#
-
 # Configure models
 model_name = 'cb_model'
 attn_model = 'dot'
@@ -303,8 +239,8 @@ batch_size = 64
 loadFilename = None
 checkpoint_iter = 4000
 if not args.train:
-    loadFilename = os.path.join(save_dir, model_name, corpus_name,
-                            '{}-{}_{}'.format(encoder_n_layers, decoder_n_layers, hidden_size),
+    loadFilename = os.path.join(SAVE_DIR, model_name, CORPUS_NAME,
+                            '{}-{}_{}'.format(encoder_n_layers, decoder_n_layers, args.hidden_size),
                             '{}_checkpoint.tar'.format(checkpoint_iter))
 
 # Load model if a loadFilename is provided
@@ -323,12 +259,12 @@ if loadFilename:
 
 print('Building encoder and decoder ...')
 # Initialize word embeddings
-embedding = nn.Embedding(voc.num_words, hidden_size)
+embedding = nn.Embedding(voc.num_words, args.hidden_size)
 if loadFilename:
     embedding.load_state_dict(embedding_sd)
 # Initialize encoder & decoder models
-encoder = EncoderRNN(hidden_size, embedding, encoder_n_layers, dropout)
-decoder = LuongAttnDecoderRNN(attn_model, embedding, hidden_size, voc.num_words, decoder_n_layers, dropout)
+encoder = EncoderRNN(args.hidden_size, embedding, encoder_n_layers, dropout)
+decoder = LuongAttnDecoderRNN(attn_model, embedding, args.hidden_size, voc.num_words, decoder_n_layers, dropout)
 if loadFilename:
     encoder.load_state_dict(encoder_sd)
     decoder.load_state_dict(decoder_sd)
@@ -361,8 +297,8 @@ if __name__ == "__main__":
         # Run training iterations
         print("Starting Training!")
         trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, decoder_optimizer,
-                embedding, encoder_n_layers, decoder_n_layers, save_dir, n_iteration, batch_size,
-                args.print_every, args.save_every, clip, corpus_name, loadFilename)
+                embedding, encoder_n_layers, decoder_n_layers, SAVE_DIR, n_iteration, batch_size,
+                args.print_every, args.save_every, clip, CORPUS_NAME, loadFilename)
     else:
         encoder.eval()
         decoder.eval()
