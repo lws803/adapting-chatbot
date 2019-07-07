@@ -1,4 +1,4 @@
-from utils import *
+from utils import PAD_token, SOS_token, EOS_token
 
 class Voc:
     def __init__(self, name):
@@ -42,7 +42,7 @@ class Voc:
         self.word2index = {}
         self.word2count = {}
         self.index2word = {PAD_token: "PAD", SOS_token: "SOS", EOS_token: "EOS"}
-        self.num_words = 3 # Count default tokens
+        self.num_words = 3  # Count default tokens
 
         for word in keep_words:
             self.addWord(word)

@@ -22,7 +22,7 @@ parser.add_argument('--train', action='store_true')
 parser.add_argument('--save_every', default=500, type=int)
 parser.add_argument('--print_every', default=1, type=int)
 parser.add_argument('--hidden_size', default=500, type=int)
-parser.add_argument('--model_name', default='model_cb', type=str)
+parser.add_argument('--model_name', default='cb_model', type=str)
 parser.add_argument('--attn_model', default='dot', type=str, help='general, concat or dot',
                     choices=['dot', 'general', 'concat'])
 parser.add_argument('--encoder_n_layers', default=2, type=int)
@@ -227,7 +227,6 @@ if loadFilename:
     decoder_optimizer_sd = checkpoint['de_opt']
     embedding_sd = checkpoint['embedding']
     voc.__dict__ = checkpoint['voc_dict']
-
 
 print('Building encoder and decoder ...')
 # Initialize word embeddings

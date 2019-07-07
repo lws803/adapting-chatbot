@@ -17,6 +17,7 @@ import csv
 CORPUS_NAME = "cornell movie-dialogs corpus"
 CORPUS = os.path.join("data", CORPUS_NAME)
 SAVE_DIR = os.path.join("data", "save")
+DELIMETER = '\t'
 
 # Splits each line of the file into a dictionary of fields
 def loadLines(fileName, fields):
@@ -58,7 +59,7 @@ def readVocs(datafile, corpus_name):
     lines = open(datafile, encoding='utf-8').\
         read().strip().split('\n')
     # Split every line into pairs and normalize
-    pairs = [[normalizeString(s) for s in l.split('\t')] for l in lines]
+    pairs = [[normalizeString(s) for s in l.split(DELIMETER)] for l in lines]
     voc = Voc(corpus_name)
     return voc, pairs
 
@@ -108,15 +109,9 @@ def batch2TrainData(voc, pair_batch):
 
 class DataLoader:
 
-    def generate_voc_pairs(self):
-        printLines(os.path.join(CORPUS, "movie_lines.txt"))
-
-        # Define path to new file
-        datafile = os.path.join(CORPUS, "formatted_movie_lines.txt")
-
-        delimiter = '\t'
+    def wash_data(self, datafile):
         # Unescape the delimiter
-        delimiter = str(codecs.decode(delimiter, "unicode_escape"))
+        delimiter = str(codecs.decode(DELIMETER, "unicode_escape"))
 
         # Initialize lines dict, conversations list, and field ids
         lines = {}
@@ -138,6 +133,15 @@ class DataLoader:
             for pair in extractSentencePairs(conversations):
                 writer.writerow(pair)
 
+
+    def generate_voc_pairs(self):
+        printLines(os.path.join(CORPUS, "movie_lines.txt"))
+        # Define path to new file
+        datafile = os.path.join(CORPUS, "formatted_movie_lines.txt")
+
+        if not (os.path.exists(datafile)):
+            self.wash_data(datafile)
+
         # Print a sample of lines
         print("\nSample lines from file:")
         printLines(datafile)
@@ -149,3 +153,8 @@ class DataLoader:
         # Trim voc and pairs
         pairs = trimRareWords(voc, pairs, MIN_COUNT)
         return voc, pairs
+
+
+if __name__ == "__main__":
+    dl = DataLoader()
+    voc, pairs = dl.generate_voc_pairs()
