@@ -1,4 +1,6 @@
 from io import open
+from utils import *
+from vocab import Voc
 
 # Splits each line of the file into a dictionary of fields
 def loadLines(fileName, fields):
@@ -32,3 +34,30 @@ def loadConversations(fileName, lines, fields):
                 convObj["lines"].append(lines[lineId])
             conversations.append(convObj)
     return conversations
+
+# Read query/response pairs and return a voc object
+def readVocs(datafile, corpus_name):
+    print("Reading lines...")
+    # Read the file and split into lines
+    lines = open(datafile, encoding='utf-8').\
+        read().strip().split('\n')
+    # Split every line into pairs and normalize
+    pairs = [[normalizeString(s) for s in l.split('\t')] for l in lines]
+    voc = Voc(corpus_name)
+    return voc, pairs
+
+
+# Using the functions defined above, return a populated voc object and pairs list
+def loadPrepareData(corpus, corpus_name, datafile, save_dir):
+    print("Start preparing training data ...")
+    voc, pairs = readVocs(datafile, corpus_name)
+    print("Read {!s} sentence pairs".format(len(pairs)))
+    pairs = filterPairs(pairs)
+    print("Trimmed to {!s} sentence pairs".format(len(pairs)))
+    print("Counting words...")
+    for pair in pairs:
+        voc.addSentence(pair[0])
+        voc.addSentence(pair[1])
+    print("Counted words:", voc.num_words)
+    return voc, pairs
+
