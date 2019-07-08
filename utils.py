@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 import unicodedata
-import editdistance
+import difflib
 
 import re
 from io import open
@@ -48,7 +48,7 @@ def normalizeString(s):
     return s
 
 def find_best_match(word, lst):
-    return min((editdistance.eval(word, w), w) for w in lst)[1]
+    return difflib.get_close_matches(word, lst)[0]
 
 def indexesFromSentence(voc, sentence):
     indexed_sentence = []

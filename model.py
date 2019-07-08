@@ -116,6 +116,7 @@ class LuongAttnDecoderRNN(nn.Module):
         # Return output and final hidden state
         return output, hidden
 
+# TODO: Try changing this to beam search
 class GreedySearchDecoder(nn.Module):
     def __init__(self, encoder, decoder):
         super(GreedySearchDecoder, self).__init__()
