@@ -40,7 +40,7 @@ def process(lines):
         if start != -1 and end != -1:
             if "Messages to this chat and calls are now secured with end-to-end encryption." in line:
                 continue
-            if "video omitted" in line:
+            if "image omitted" in line:
                 continue
 
             result = mystring[end + 2:len(mystring) - 1]

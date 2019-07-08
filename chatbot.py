@@ -81,6 +81,7 @@ def train(input_variable, lengths, target_variable, mask, max_target_len, encode
     use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
     # Forward batch of sequences through decoder one time step at a time
+    # TODO: Read up more about teacher forcing
     if use_teacher_forcing:
         for t in range(max_target_len):
             decoder_output, decoder_hidden = decoder(
