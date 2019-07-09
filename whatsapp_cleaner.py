@@ -31,7 +31,7 @@ def process(lines):
 
     for line in lines:
         mystring = line
-        mystring = mystring.encode('ascii', 'ignore').decode('ascii')
+        mystring = mystring.encode('utf-8', 'ignore').decode('utf-8')
         # mystring = chomp(mystring)
 
         start = mystring.find('[')
@@ -41,6 +41,8 @@ def process(lines):
             if "Messages to this chat and calls are now secured with end-to-end encryption." in line:
                 continue
             if "image omitted" in line:
+                continue
+            if "video omitted" in line:
                 continue
 
             result = mystring[end + 2:len(mystring) - 1]
@@ -82,6 +84,6 @@ def process(lines):
 
 
 for filename in os.listdir(args.infolder):
-    f = open(args.infolder + filename, "r")
+    f = open(args.infolder + "/" + filename, "r")
     lines = f.readlines()
     process(lines)
