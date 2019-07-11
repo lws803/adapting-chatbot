@@ -1,2 +1,5 @@
 data/
 *pyc
+*.txt
+!*/README.md
+!requirements.txt
