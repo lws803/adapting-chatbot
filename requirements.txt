@@ -2,3 +2,4 @@ vaderSentiment
 torch
 torchvision
 aiohttp
+python-telegram-bot
