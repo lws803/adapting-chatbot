@@ -19,9 +19,6 @@ from model import EncoderRNN, LuongAttnDecoderRNN, GreedySearchDecoder
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--train', action='store_true')
-parser.add_argument('--save_every', default=500, type=int)
-parser.add_argument('--print_every', default=1, type=int)
 parser.add_argument('--hidden_size', default=500, type=int)
 parser.add_argument('--model_name', default='cb_model', type=str)
 parser.add_argument('--attn_model', default='dot', type=str, help='general, concat or dot',
@@ -29,9 +26,9 @@ parser.add_argument('--attn_model', default='dot', type=str, help='general, conc
 parser.add_argument('--encoder_n_layers', default=2, type=int)
 parser.add_argument('--decoder_n_layers', default=2, type=int)
 parser.add_argument('--dropout', default=0.1, type=float)
-parser.add_argument('--batch_size', default=64, type=int)
 parser.add_argument('--checkpoint_iter', default=26000, type=int)
-parser.add_argument('--iterations', default=4000, type=int)
+parser.add_argument('--threshold', default=0.2, type=float)
+
 
 args = parser.parse_args()
 
@@ -72,12 +69,9 @@ def evaluate(encoder, decoder, searcher, voc, sentence, max_length=MAX_LENGTH):
     return decoded_words, float(score)
 
 
-# Set checkpoint to load from; set to None if starting from scratch
-loadFilename = None
-if not args.train:
-    loadFilename = os.path.join(SAVE_DIR, args.model_name, CORPUS_NAME,
-                            '{}-{}_{}'.format(args.encoder_n_layers, args.decoder_n_layers, args.hidden_size),
-                            '{}_checkpoint.tar'.format(args.checkpoint_iter))
+loadFilename = os.path.join(SAVE_DIR, args.model_name, CORPUS_NAME,
+                        '{}-{}_{}'.format(args.encoder_n_layers, args.decoder_n_layers, args.hidden_size),
+                        '{}_checkpoint.tar'.format(args.checkpoint_iter))
 
 # Load model if a loadFilename is provided
 if loadFilename:
