@@ -124,8 +124,6 @@ app = web.Application()
 
 async def handle(request):
     my_input = request.query['input']
-    # response = chatbot.get_response(my_input)
-
     input_sentence = normalizeString(my_input)
     # Evaluate sentence
     output_words, score = evaluate(encoder, decoder, searcher, voc, input_sentence)
