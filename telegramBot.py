@@ -37,11 +37,6 @@ learningInput = {}
 learningResponse = {}
 randomNum = 0
 
-
-
-#CONVERSATION_ID = chatbot.storage.create_conversation()
-
-
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -52,73 +47,62 @@ logger = logging.getLogger(__name__)
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
 def start(bot, update):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
     """Send a message when the command /start is issued."""
     update.message.reply_text('Onegaishimashka\n\ntype /help to see available commands')
 
 
 def help(bot, update):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
     """Send a message when the command /help is issued."""
     update.message.reply_text('/cancel - cancel learn request \n')
 
 
 def respond(user_input, update, bot):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
-    response = chatbot.get_response(user_input)
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
+    # response = chatbot.get_response(user_input)
 
-    if (response.confidence < threshold and not(str(update.message.from_user.username) in learningInput)):
-        update.message.reply_text("What talking you? what should I say?")
+    # if (response.confidence < threshold and not(str(update.message.from_user.username) in learningInput)):
+    #     update.message.reply_text("What talking you? what should I say?")
 
-        learningInput[str(update.message.from_user.username)] = user_input
-        learningResponse[str(update.message.from_user.username)] = response
+    #     learningInput[str(update.message.from_user.username)] = user_input
+    #     learningResponse[str(update.message.from_user.username)] = response
 
-    elif (str(update.message.from_user.username) in learningInput):
-        corrected_response = learningResponse[str(update.message.from_user.username)]
-        corrected_response.text = user_input.text
+    # elif (str(update.message.from_user.username) in learningInput):
+    #     corrected_response = learningResponse[str(update.message.from_user.username)]
+    #     corrected_response.text = user_input.text
 
-        chatbot.learn_response(corrected_response, learningInput[str(update.message.from_user.username)])
-        #chatbot.storage.add_to_conversation(CONVERSATION_ID, user_input, corrected_response)
-        update.message.reply_text("Roger. I'll learn from you")
+    #     chatbot.learn_response(corrected_response, learningInput[str(update.message.from_user.username)])
+    #     #chatbot.storage.add_to_conversation(CONVERSATION_ID, user_input, corrected_response)
+    #     update.message.reply_text("Roger. I'll learn from you")
 
-        learningInput.pop(str(update.message.from_user.username), None)
-        learningResponse.pop(str(update.message.from_user.username), None)
-    else:
-        update.message.reply_text(response.text)
+    #     learningInput.pop(str(update.message.from_user.username), None)
+    #     learningResponse.pop(str(update.message.from_user.username), None)
+    # else:
+    #     update.message.reply_text(response.text)
 
 
 def chinchin(bot, update):
     if (update.message.chat_id == -288581501):
         #user_input = Statement("")
-        then = time.time()
         text = update.message.text.replace("@chinchin519bot ", "")
-        user_input = Statement(text) # Needed to turn str input into a statement 
-        respond (user_input, update, bot)
-        now = time.time()
-        #print update.message.chat_id
-        print (now - then)
-        print (update.message.chat_id)
+        user_input = text  # Needed to turn str input into a statement
+        respond(user_input, update, bot)
 
+        #print update.message.chat_id
     else:
-       update.message.reply_text("Please talk to @chinchin519bot instead..") 
+        update.message.reply_text("Please talk to @chinchin519bot instead..") 
 
 
 def learn(bot, update, args):
     user_input = ''
-    update.message.reply_text("What shd be my response? I'm here to learn and replace")
-    for items in args:
-        user_input += str(items)
-        user_input += " "
-    print (user_input)
-    learningInput[str(update.message.from_user.username)] = Statement(user_input)
-    learningResponse[str(update.message.from_user.username)] = Statement(user_input)
-
-
-def exportModel(bot, update):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
-    chatbot.trainer.export_for_training('./export.yml')
-    update.message.reply_text("I have made a child... a new chin chin shall be born")
-    bot.send_document(chat_id=update.message.chat_id, document=open('./export.yml', 'rb'))
+    # update.message.reply_text("What shd be my response? I'm here to learn and replace")
+    # for items in args:
+    #     user_input += str(items)
+    #     user_input += " "
+    # print (user_input)
+    # learningInput[str(update.message.from_user.username)] = Statement(user_input)
+    # learningResponse[str(update.message.from_user.username)] = Statement(user_input)
 
 
 def error(bot, update, error):
@@ -145,20 +129,20 @@ def getWeather(bot, update):
     bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
     api_key = args.weather_api
     lat = 1.353435
-    lng = 103.852668 # Singapore
+    lng = 103.852668  # Singapore
     from_zone = tz.gettz('UTC')
     to_zone = tz.gettz('Singapore')
-    time = datetime.datetime.utcnow()
-    time = time.replace(tzinfo=from_zone)
-    time = time.astimezone(to_zone)
+    curr_time = datetime.datetime.utcnow()
+    curr_time = curr_time.replace(tzinfo=from_zone)
+    curr_time = curr_time.astimezone(to_zone)
     forecast = forecastio.load_forecast(api_key, lat, lng, time=time)
     summary = forecast.currently().summary
     temperature = "Average temperature: " + str(forecast.currently().temperature) + " C"
     update.message.reply_text(summary + "\n" + temperature)
 
 
-def getTime(bot, update): 
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+def getTime(bot, update):
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) 
     from_zone = tz.gettz('UTC')
     to_zone = tz.gettz('Singapore')
     time = datetime.datetime.utcnow()
@@ -187,10 +171,10 @@ def getCat(bot, update):
             iserror = False
             update.message.reply_text("Here's a kitty for you~\n" + data['file'])
         except ValueError:
-            print ("Error, trying again...")
+            print("Error, trying again...")
             retries += 1
     if (iserror):
-        print ("Error sending")
+        print("Error sending")
         update.message.reply_text("Error, try again :3")
 
     #bot.send_photo(chat_id=update.message.chat_id, photo="http://thecatapi.com/api/images/get?format=src")
@@ -198,7 +182,7 @@ def getCat(bot, update):
 
 
 def getCorgi(bot, update):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)  # Added this to make it more natural
     s = requests.Session()
     r = s.get('https://dog.ceo/api/breed/corgi/cardigan/images/random')
     data = r.json()
@@ -207,21 +191,21 @@ def getCorgi(bot, update):
 
 
 def getJames(bot, update):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)  # Added this to make it more natural
     bot.send_photo(chat_id=update.message.chat_id, photo=open('james/james.jpg', 'rb'))
 
 def getGab(bot, update):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
-    randomNum = random.randint(0,4)
-    bot.send_photo(chat_id=update.message.chat_id, photo=open('gab/' + str(randomNum) + '.jpeg' , 'rb'))
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)  # Added this to make it more natural
+    randomNum = random.randint(0, 4)
+    bot.send_photo(chat_id=update.message.chat_id, photo=open('gab/' + str(randomNum) + '.jpeg', 'rb'))
 
 def getJulian(bot, update):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
-    randomNum = random.randint(0,7)
-    bot.send_photo(chat_id=update.message.chat_id, photo=open('julian/' + str(randomNum) + '.jpeg' , 'rb'))
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)  # Added this to make it more natural
+    randomNum = random.randint(0, 7)
+    bot.send_photo(chat_id=update.message.chat_id, photo=open('julian/' + str(randomNum) + '.jpeg', 'rb'))
 
 def getSort(bot, update, args):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)  # Added this to make it more natural
     if (len(args) == 0):
         update.message.reply_text("Give me what sort you want la... use /sort bubblesort for example")
         return
@@ -248,7 +232,7 @@ def getSort(bot, update, args):
 def getYoutubeLink(bot, update):
     channels = ['PLzJj8MimD4DEV_19cvlG5cQyZ0pnF2d1i', 'PLPPpv0bD5M6ia-OowntB1ev6d4tQXKfdq', 'PLzJj8MimD4DHIyxcWS86vTkT37NhASzSo']
     bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
-    myLink = channels[random.randint(0,1)]
+    myLink = channels[random.randint(0, 1)]
     playlist_id = str(myLink)
     links = []
     token = ''  # to get ID to next page  CDIQAA
@@ -279,24 +263,26 @@ def getYoutubeLink(bot, update):
 
 
 
-def getKattisQuestions (bot, update):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+def getKattisQuestions(bot, update):
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
+    # Added this to make it more natural
     d = feedparser.parse('https://open.kattis.com/rss/new-problems')
     size = len(d.entries)
-    randNum = random.randint(0, size-1)
+    randNum = random.randint(0, size - 1)
     link = d.entries[randNum].link
     title = d.entries[randNum].title
     update.message.reply_text(title + "\n" + link)
 
 
-def getStatus (bot, update): 
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+def getStatus(bot, update): 
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
+    # Added this to make it more natural
     ec2 = boto3.resource('ec2')
     for status in ec2.meta.client.describe_instance_status()['InstanceStatuses']:
         update.message.reply_text(
-            "Status: " + status['SystemStatus']['Status'] 
+            "Status: " + status['SystemStatus']['Status']
             + "\n" + "CPU usage: " + str(psutil.cpu_percent(interval=1))
-        )   
+        )
 
 
 def google_scrape(url):
@@ -305,7 +291,7 @@ def google_scrape(url):
     return soup
 
 def google_search(bot, update, args):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
     user_input = ""
     for items in args:
         user_input += str(unidecode(items))
@@ -317,10 +303,10 @@ def google_search(bot, update, args):
         if (a.title is not None):
             update.message.reply_text(a.title.text + "\n" + url)
             break
- 
+
 
 def youtube_search(bot, update, args):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
     user_input = ""
     for items in args:
         user_input += str(unidecode(items))
@@ -347,11 +333,11 @@ def youtube_search(bot, update, args):
 
     else:
         payload = {
-            'q': query, 
+            'q': query,
             'part': 'snippet',
             'maxResults': 1,
             'key': args.youtube_api
-            }
+        }
 
         s = requests.Session()
         r = s.get('https://www.googleapis.com/youtube/v3/search', params=payload)
@@ -361,41 +347,41 @@ def youtube_search(bot, update, args):
             break
 
 def searchUrban(bot, update, args):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
     user_input = ""
     for items in args:
         user_input += str(unidecode(items))
         user_input += " "
     query = user_input
-    if (len(args) is not 0):
+    if (len(args) != 0):
         payload = {
-            'term': query 
+            'term': query
         }
 
         s = requests.Session()
         r = s.get('http://api.urbandictionary.com/v0/define', params=payload)
-        data = r.json() 
+        data = r.json()
         definitions = []
         for item in data["list"]:
             definitions.append(item["definition"] + "\n" + item["permalink"])
 
-    update.message.reply_text(definitions[random.randint(0, len(definitions)-1)])
+    update.message.reply_text(definitions[random.randint(0, len(definitions) - 1)])
 
 def buhuireply(bot, update):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
     #bot.send_photo(chat_id=update.message.chat_id, photo=open('buhuireply.mp4', 'rb'))
     bot.send_document(chat_id=update.message.chat_id, document=open('buhuireply.mp4', 'rb'))
 
 
 def parseTree(bot, update, args):
-    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING) # Added this to make it more natural
+    bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
 
     user_input = ""
     for items in args:
         user_input += str(unidecode(items))
         user_input += " "
 
-    
+
     update.message.reply_text(str(tree_parser.parse(user_input)))
 
 
@@ -416,7 +402,6 @@ def main():
     dp.add_handler(CommandHandler("learn", learn, pass_args=True))
     dp.add_handler(CommandHandler("threshold", setThresh, pass_args=True))
     dp.add_handler(CommandHandler("showthresh", showThresh))
-    dp.add_handler(CommandHandler("exportmodel", exportModel))
     dp.add_handler(CommandHandler("cancel", cancelLearn))
     dp.add_handler(CommandHandler("weather", getWeather))
     dp.add_handler(CommandHandler("time", getTime))
