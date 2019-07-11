@@ -11,11 +11,12 @@ import torch
 import torch.nn as nn
 import os
 import argparse
-from utils import (MAX_LENGTH,
-                normalizeString,
-                indexesFromSentence)
+from utils import (normalizeString)
 from dataloader import DataLoader, SAVE_DIR, CORPUS_NAME
 from model import EncoderRNN, LuongAttnDecoderRNN, GreedySearchDecoder
+from chatbot import evaluate
+
+# TODO: Changed the file location for model saved
 
 parser = argparse.ArgumentParser()
 
@@ -37,36 +38,6 @@ device = torch.device("cuda" if USE_CUDA else "cpu")
 
 dl = DataLoader()
 voc, pairs = dl.generate_voc_pairs()
-
-
-def maskNLLLoss(inp, target, mask):
-    nTotal = mask.sum()
-    crossEntropy = -torch.log(torch.gather(inp, 1, target.view(-1, 1)).squeeze(1))
-    loss = crossEntropy.masked_select(mask).mean()
-    loss = loss.to(device)
-    return loss, nTotal.item()
-
-
-def evaluate(encoder, decoder, searcher, voc, sentence, max_length=MAX_LENGTH):
-    ### Format input sentence as a batch
-    # words -> indexes
-    indexes_batch = [indexesFromSentence(voc, sentence)]
-    # Create lengths tensor
-    lengths = torch.tensor([len(indexes) for indexes in indexes_batch])
-    # Transpose dimensions of batch to match models' expectations
-    input_batch = torch.LongTensor(indexes_batch).transpose(0, 1)
-    # Use appropriate device
-    input_batch = input_batch.to(device)
-    lengths = lengths.to(device)
-    # Decode sentence with searcher
-    tokens, scores = searcher(input_batch, lengths, max_length)
-    score = 1
-    for item in scores:
-        score *= item
-    print("scores:", float(score))
-    # indexes -> words
-    decoded_words = [voc.index2word[token.item()] for token in tokens]
-    return decoded_words, float(score)
 
 
 loadFilename = os.path.join(SAVE_DIR, args.model_name, CORPUS_NAME,

@@ -40,6 +40,7 @@ device = torch.device("cuda" if USE_CUDA else "cpu")
 dl = DataLoader()
 voc, pairs = dl.generate_voc_pairs()
 
+# TODO: Change the location for model file saved
 
 def maskNLLLoss(inp, target, mask):
     nTotal = mask.sum()
