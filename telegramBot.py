@@ -60,6 +60,8 @@ def help(bot, update):
 
 def respond(user_input, update, bot):
     bot.send_chat_action(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
+    # TODO: If threshold is small, then we trigger storing in message queue
+
     # response = chatbot.get_response(user_input)
 
     # if (response.confidence < threshold and not(str(update.message.from_user.username) in learningInput)):
@@ -433,9 +435,6 @@ def main():
     updater.start_polling()
     print("All systems started")
 
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
 

@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from tqdm import tqdm
 import torch
 import torch.nn as nn
 from torch import optim
@@ -138,7 +139,7 @@ def trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, deco
 
     # Training loop
     print("Training...")
-    for iteration in range(start_iteration, n_iteration + 1):
+    for iteration in tqdm(range(start_iteration, n_iteration + 1)):
         training_batch = training_batches[iteration - 1]
         # Extract fields from batch
         input_variable, lengths, target_variable, mask, max_target_len = training_batch
