@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from utils import SOS_token
+from math import log
 
 USE_CUDA = torch.cuda.is_available()
 device = torch.device("cuda" if USE_CUDA else "cpu")
@@ -116,7 +117,6 @@ class LuongAttnDecoderRNN(nn.Module):
         # Return output and final hidden state
         return output, hidden
 
-# TODO: Try changing this to beam search
 class GreedySearchDecoder(nn.Module):
     def __init__(self, encoder, decoder):
         super(GreedySearchDecoder, self).__init__()
@@ -146,3 +146,49 @@ class GreedySearchDecoder(nn.Module):
             decoder_input = torch.unsqueeze(decoder_input, 0)
         # Return collections of word tokens and scores
         return all_tokens, all_scores
+
+
+class BeamSearchDecoder(nn.Module):
+    # TODO: Find out how Greedy search decoder works
+    # TODO: Find out how beam search decoder works
+    # TODO: Weave beam search algo into this
+    def __init__(self, encoder, decoder):
+        super(BeamSearchDecoder, self).__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+
+    def forward(self, input_seq, input_length, max_length):
+        # Forward input through encoder model
+        encoder_outputs, encoder_hidden = self.encoder(input_seq, input_length)
+        # Prepare encoder's final hidden layer to be first hidden input to the decoder
+        decoder_hidden = encoder_hidden[:self.decoder.n_layers]
+        # Initialize decoder input with SOS_token
+        decoder_input = torch.ones(1, 1, device=device, dtype=torch.long) * SOS_token
+        # Initialize tensors to append decoded words to
+
+        sequences = [[list(), 1.0]]
+        k = 1
+        # Iteratively decode one word token at a time
+        for _ in range(max_length):
+            # Forward pass through decoder
+            decoder_output, decoder_hidden = self.decoder(decoder_input, decoder_hidden, encoder_outputs)
+            all_candidates = list()  # TODO: Find a tensor to store all candidates
+            # expand each current candidate
+            for i in range(len(sequences)):
+                seq, score = sequences[i]
+
+                # TODO: Find a tensor to perform the following operation
+                flattened_decoder_output = torch.flatten(decoder_output)
+                for j in range(flattened_decoder_output.size()[0]):
+                    candidate = [seq + [j], score * -log(flattened_decoder_output[j])]
+                    all_candidates.append(candidate)
+
+            # order all candidates by score
+            ordered = sorted(all_candidates, key=lambda tup: tup[1])
+            # select k best
+            sequences = ordered[:k]  # TODO: Can be used to randomise in future
+
+        return torch.LongTensor(sequences[0][0]), 1.0
+
+        # Return collections of word tokens and scores
+        # return all_tokens, all_scores

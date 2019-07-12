@@ -15,7 +15,7 @@ from utils import (SOS_token,
                 normalizeString,
                 indexesFromSentence)
 from dataloader import batch2TrainData, DataLoader, SAVE_DIR, CORPUS_NAME
-from model import EncoderRNN, LuongAttnDecoderRNN, GreedySearchDecoder
+from model import EncoderRNN, LuongAttnDecoderRNN, GreedySearchDecoder, BeamSearchDecoder
 
 parser = argparse.ArgumentParser()
 
@@ -32,6 +32,7 @@ parser.add_argument('--dropout', default=0.1, type=float)
 parser.add_argument('--batch_size', default=64, type=int)
 parser.add_argument('--checkpoint_iter', default=4000, type=int)
 parser.add_argument('--iterations', default=4000, type=int)
+parser.add_argument('--decoder', default='greedy', type=str)
 
 args = parser.parse_args()
 
@@ -185,11 +186,8 @@ def evaluate(encoder, decoder, searcher, voc, sentence, max_length=MAX_LENGTH):
     lengths = lengths.to(device)
     # Decode sentence with searcher
     tokens, scores = searcher(input_batch, lengths, max_length)
-    score = 1
-    for item in scores:
-        score *= item
-    print("scores:", float(score))
-    # indexes -> words
+
+
     decoded_words = [voc.index2word[token.item()] for token in tokens]
     return decoded_words
 
@@ -292,5 +290,8 @@ if __name__ == "__main__":
         encoder.eval()
         decoder.eval()
         # Initialize search module
-        searcher = GreedySearchDecoder(encoder, decoder)
+        if args.decoder == "greedy":
+            searcher = GreedySearchDecoder(encoder, decoder)
+        else:
+            searcher = BeamSearchDecoder(encoder, decoder)
         evaluateInput(encoder, decoder, searcher, voc)
