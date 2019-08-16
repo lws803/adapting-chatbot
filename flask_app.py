@@ -74,18 +74,13 @@ decoder = decoder.to(device)
 print('Models built and ready to go!')
 
 
-threshold = 0.7
-learningInput = {}
-learningResponse = {}
-randomNum = 0
-
 encoder.eval()
 decoder.eval()
 # Initialize search module
 searcher = GreedySearchDecoder(encoder, decoder)
 
-
 app = web.Application()
+
 
 async def handle(request):
     my_input = request.query['input']
@@ -98,7 +93,6 @@ async def handle(request):
     response_obj = {'status': 'success', "response": ' '.join(output_words), "confidence": score}
 
     return web.Response(text=json.dumps(response_obj), status=200)
-
 
 
 app.router.add_route("GET", "/input", handle)
