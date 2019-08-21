@@ -16,6 +16,7 @@ from utils import (SOS_token,
                 indexesFromSentence)
 from dataloader import batch2TrainData, DataLoader, SAVE_DIR, CORPUS_NAME
 from model import EncoderRNN, LuongAttnDecoderRNN, GreedySearchDecoder, BeamSearchDecoder
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
 
@@ -30,7 +31,7 @@ parser.add_argument('--encoder_n_layers', default=2, type=int)
 parser.add_argument('--decoder_n_layers', default=2, type=int)
 parser.add_argument('--dropout', default=0.1, type=float)
 parser.add_argument('--batch_size', default=64, type=int)
-parser.add_argument('--checkpoint_iter', default=4000, type=int)
+parser.add_argument('--checkpoint_iter', default=23000, type=int)
 parser.add_argument('--iterations', default=4000, type=int)
 parser.add_argument('--decoder', default='greedy', type=str)
 
@@ -140,6 +141,9 @@ def trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, deco
 
     # Training loop
     print("Training...")
+    plot_iterations = []
+    plot_losses = []
+
     for iteration in tqdm(range(start_iteration, n_iteration + 1)):
         training_batch = training_batches[iteration - 1]
         # Extract fields from batch
@@ -155,6 +159,9 @@ def trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, deco
             print_loss_avg = print_loss / print_every
             print("Iteration: {}; Percent complete: {:.1f}%; Average loss: {:.4f}".format(iteration, iteration / n_iteration * 100, print_loss_avg))
             print_loss = 0
+            plot_iterations.append(iteration)
+            plot_losses.append(print_loss_avg)
+
 
         # Save checkpoint
         if (iteration % save_every == 0):
@@ -171,6 +178,10 @@ def trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, deco
                 'voc_dict': voc.__dict__,
                 'embedding': embedding.state_dict()
             }, os.path.join(directory, '{}_{}.tar'.format(iteration, 'checkpoint')))
+    plt.plot(plot_iterations, plot_losses)
+    plt.xlabel('iterations')
+    plt.ylabel('losses')
+    plt.savefig('model_training.png')
 
 
 def evaluate(encoder, decoder, searcher, voc, sentence, max_length=MAX_LENGTH):
