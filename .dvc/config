@@ -1,0 +1,4 @@
+['remote "s3remote"']
+url = s3://chinchin-models
+[core]
+remote = s3remote
