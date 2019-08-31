@@ -1,4 +1,6 @@
 ['remote "s3remote"']
 url = s3://chinchin-models
 [core]
-remote = s3remote
+remote = myremote
+['remote "myremote"']
+url = /Volumes/WD_MAC_SSD/models_dvc
